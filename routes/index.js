@@ -46,7 +46,7 @@ router.get('/laporan/n', async function(req, res, next) {
   let reportjuals;
   let reportb;
   let reportj;
-  let perubahan;
+  // let perubahan;
   let bahanp;
   let today = new Date();
   var dd = String(today.getDate()).padStart(2, '0');
@@ -203,7 +203,7 @@ router.post('/laporan/p', async function(req, res, next) {
   let reportjuals;
   let reportb;
   let reportj;
-  let perubahan;
+  // let perubahan;
   let bahanp;
   let today = new Date();
   var dd = String(today.getDate()).padStart(2, '0');
