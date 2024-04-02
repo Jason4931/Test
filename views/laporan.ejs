@@ -71,11 +71,12 @@
             <% bahan.forEach(function(bahan) { %>
               <tr>
                 <td><%= bahan.Nama %></td>
-                <% if(bahan.sisabeli == 0 && bahan.sisajual == 0) { %>
+                <% if(bahan.sisabeli == 0 || bahan.sisajual == 0) { %>
                   <td><%= bahan.Jumlah %></td>
                 <% } else { %>
                   <td><%= bahan.sisabeli - bahan.sisajual %></td>
                 <% } %>
+                <td><%= bahan.sisabeli - bahan.sisajual %></td>
               </tr>
             <% }) %>
           </table>

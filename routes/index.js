@@ -157,13 +157,14 @@ router.get('/laporan/n', async function(req, res, next) {
         ]
       }
     },
-    { $group:
+    {
+      $group:
       {
-        _id : "$Nama",
-        sum : { $sum: "$Jumlah" }
+        _id: "$Nama",
+        sum: { $sum: "$Jumlah" }
       }
     }
-  ])
+  ]);
   bahanp = await bahan.find();
   for (let i = 0; i < bahanp.length; i++) {
     if (sisabeli[i] != undefined) {
@@ -186,14 +187,14 @@ router.get('/laporan/n', async function(req, res, next) {
       bahanp[i].sisajual = 0;
     }
   }
-  perubahan = await reportjual.find();
+  // perubahan = await reportjual.find();
   //DB::select("SELECT nama, sum(jumlah) as jumlah FROM ( SELECT nama, sum(jumlah) as jumlah FROM `reportbelis`
   //WHERE created_at>='date(Y-m-d)' AND created_at<='$date' GROUP BY nama UNION ALL SELECT stocks.nama,
   //sum(product_bahans.jumlah*reportjuals.jumlah)*-1 as jumlah FROM `product_bahans` INNER JOIN products on
   //product_bahans.produk=products.id INNER JOIN stocks on product_bahans.bahan=stocks.id INNER JOIN
   //reportjuals on reportjuals.nama=products.nama WHERE reportjuals.created_at>='date(Y-m-d)' AND
   //reportjuals.created_at<='$date' GROUP BY stocks.nama ) as report GROUP BY nama")
-  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, perubahan: perubahan, bahan: bahanp, state: "n" });
+  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n" });
 });
 router.post('/laporan/p', async function(req, res, next) {
   let start = req.body.start;
@@ -318,14 +319,15 @@ router.post('/laporan/p', async function(req, res, next) {
         ]
       }
     },
-    { $group:
+    {
+      $group:
       {
-        _id : "$Nama",
-        sum : { $sum: "$Jumlah" }
+        _id: "$Nama",
+        sum: { $sum: "$Jumlah" }
       }
     },
-    { $sort : { Tanggal : 1 } }
-  ])
+    { $sort: { Tanggal: 1 } }
+  ]);
   bahanp = await bahan.find();
   for (let i = 0; i < bahanp.length; i++) {
     if (sisabeli[i] != undefined) {
@@ -348,8 +350,8 @@ router.post('/laporan/p', async function(req, res, next) {
       bahanp[i].sisajual = 0;
     }
   }
-  perubahan = await reportjual.find();
-  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, start: start, end: end, reportb: reportb, reportj: reportj, perubahan: perubahan, bahan: bahanp, state: "p" });
+  // perubahan = await reportjual.find();
+  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, start: start, end: end, reportb: reportb, reportj: reportj, bahan: bahanp, state: "p" });
 });
 router.post('/create/:for', async function(req, res, next) {
   try {
