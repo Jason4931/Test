@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aplikasi Cafe</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <a href="/">Kembali</a>
+    <p>Laporan</p>
+    <p>
+      <form action="/laporan/p" method="post">
+        Periode :
+        <% if(state == "n") { %>
+          <input name="start" type="date" value="<%= datenow %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= datenow %>" max="<%= datenow %>">
+        <% } else { %>
+          <input name="start" type="date" value="<%= start %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= end %>" max="<%= datenow %>">
+        <% } %>
+        <br>
+        <input type="submit">
+      </form>
+      <a href="/laporan/n">Refresh Periode</a>
+    </p>
+    <table border="1" cellpadding="5">
+      <tr>
+        <td>
+          <p>Histori Laporan Penjualan & Pembelian <% if(state == "n") { %>Hari Ini<% } %></p>
+          <table border="1" style="width: 100%">
+            <tr>
+              <th rowspan="2">Action</th>
+              <th colspan="2">Harga</th>
+              <th rowspan="2">Nama</th>
+              <th rowspan="2">Jumlah</th>
+              <th rowspan="2">Satuan</th>
+            </tr>
+            <tr>
+              <th>Satuan</th>
+              <th>Total</th>
+            </tr>
+            <% if(reportbeli.length > 0) { %>
+              <% reportbeli.forEach(function(reportbeli) { %>
+                <tr>
+                  <td>Beli</td>
+                  <td><%= reportbeli.Harga %></td>
+                  <td><%= reportbeli.Harga * reportbeli.Jumlah %></td>
+                  <td><%= reportbeli.Nama %></td>
+                  <td><%= reportbeli.Jumlah %></td>
+                  <td><%= reportbeli.Satuan %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+            <% if(reportjual.length > 0) { %>
+              <% reportjual.forEach(function(reportjual) { %>
+                <tr>
+                  <td>Jual</td>
+                  <td><%= reportjual.Harga %></td>
+                  <td><%= reportjual.Harga * reportjual.Jumlah %></td>
+                  <td><%= reportjual.Nama %></td>
+                  <td><%= reportjual.Jumlah %></td>
+                  <td><%= reportjual.Satuan %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </table>
+          <p>Laporan Stok Bahan</p>
+          <table border="1" style="width: 100%">
+            <tr>
+              <th>Bahan</th>
+              <th>Sisa Stok</th>
+              <th>Perubahan Stok</th>
+            </tr>
+            <% bahan.forEach(function(bahan) { %>
+              <tr>
+                <td><%= bahan.Nama %></td>
+                <% if(bahan.sisabeli == 0 && bahan.sisajual == 0) { %>
+                  <td><%= bahan.Jumlah %></td>
+                <% } else { %>
+                  <td><%= bahan.sisabeli - bahan.sisajual %></td>
+                <% } %>
+              </tr>
+            <% }) %>
+          </table>
+          <p>Laporan Transaksi Penjualan</p>
+          <table border="1" style="width: 100%">
+            <tr>
+              <th>Produk</th>
+              <th>Jumlah Penjualan</th>
+              <th>Nilai Penjualan</th>
+            </tr>
+            <% if(reportj.length > 0) { %>
+              <% reportj.forEach(function(reportj) { %>
+                <tr>
+                  <td><%= reportj.nama %></td>
+                  <td><%= reportj.jumlah %> <%= reportj.Satuan %></td>
+                  <td><%= reportj.harga %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </table>
+          <p>Laporan Transaksi Pembelian</p>
+          <table border="1" style="width: 100%">
+            <tr>
+              <th>Bahan</th>
+              <th>Jumlah Pembelian</th>
+              <th>Nilai Pembelian</th>
+            </tr>
+            <% if(reportb.length > 0) { %>
+              <% reportb.forEach(function(reportb) { %>
+                <tr>
+                  <td><%= reportb.nama %></td>
+                  <td><%= reportb.jumlah %> <%= reportb.Satuan %></td>
+                  <td><%= reportb.harga %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

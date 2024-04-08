@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aplikasi Cafe</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <p>Pembelian Bahan</p>
+    <a href="/">Kembali</a><br><br>
+    <form action="/processbeli" method="post">
+      <table cellspacing="0" cellpadding="0">
+        <tr>
+          <td>Nama</td>
+          <td>⠀:⠀</td>
+          <td>
+            <select name="nama" style="width: 100%">
+              <% bahan.forEach(function(bahan) { %>
+                <option value="<%= bahan.Nama %>"><%= bahan.Nama %></option>
+              <% }) %>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Jumlah</td>
+          <td>⠀:⠀</td>
+          <td><input name="jumlah" type="number" min="0" required></td>
+        </tr>
+        <tr>
+          <td>Harga/Satuan</td>
+          <td>⠀:⠀</td>
+          <td><input name="harga" type="number" min="0" required></td>
+        </tr>
+        <tr>
+          <td>Tanggal</td>
+          <td>⠀:⠀</td>
+          <td><input name="tanggal" type="date" style="width: 172px" value="<%= today %>"></td>
+        </tr>
+        <input name="satuan" type="text" hidden>
+      </table>
+      <input type="submit" value="Submit" style="cursor:pointer">
+    </form>
+  </body>
+</html>

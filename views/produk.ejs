@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aplikasi Cafe</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <a href="/">Kembali</a>
+    <p>Produk Yang Tersedia</p>
+    <button style="cursor:pointer" onclick="createp()">Insert</button>
+    <form action="/create/produk" method="post">
+      <p id="createformp"></p>
+    </form>
+    <form action="/update/produk" method="post">
+      <p id="updateformp"></p>
+    </form>
+    <br>
+    <table border="1">
+      <tr>
+        <th>Nama</th>
+        <th>Harga</th>
+        <th>Kategori</th>
+        <th colspan="2">Action</th>
+      </tr>
+      <% if(produk.length > 0) { %>
+        <% produk.forEach(function(produk) { %>
+          <tr>
+            <td><%= produk.Nama %></td>
+            <td><%= produk.Harga %></td>
+            <td><%= produk.Kategori %></td>
+            <td><button style="cursor:pointer" onclick="updatep('<%= JSON.stringify(produk) %>')">Update</button></td>
+            <td><button style="cursor:pointer"><a style="text-decoration:none;color:black" href="/delete/produk/<%= produk._id %>">Delete</a></button></td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr><td colspan="4">Tidak Ada Data</td></tr>
+      <% } %>
+    </table>
+    <p>Bahan-Bahan Yang Diperlukan</p>
+    <button style="cursor:pointer" onclick="createpb()">Insert</button>
+    <form action="/create/produkbahan" method="post">
+      <p id="createformpb"></p>
+    </form>
+    <form action="/update/produkbahan" method="post">
+      <p id="updateformpb"></p>
+    </form>
+    <br>
+    <table border="1">
+      <tr>
+        <th>Produk</th>
+        <th>Bahan</th>
+        <th>Jumlah</th>
+        <th>Satuan</th>
+        <th colspan="2">Action</th>
+      </tr>
+      <% if(produkbahan.length > 0) { %>
+        <% produkbahan.forEach(function(produkbahan) { %>
+          <tr>
+            <td><%= produkbahan.Produk %></td>
+            <td><%= produkbahan.Bahan %></td>
+            <td><%= produkbahan.Jumlah %></td>
+            <td><%= produkbahan.Satuan %></td>
+            <td><button style="cursor:pointer" onclick="updatepb('<%= JSON.stringify(produkbahan) %>', '<%= JSON.stringify(produk) %>')">Update</button></td>
+            <td><button style="cursor:pointer"><a style="text-decoration:none;color:black" href="/delete/produkbahan/<%= produkbahan._id %>">Delete</a></button></td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr><td colspan="5">Tidak Ada Data</td></tr>
+      <% } %>
+    </table>
+    <script>
+      function createp() {
+        if(document.getElementById("createformp").innerHTML == "") {
+          document.getElementById("createformp").innerHTML = `
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Nama</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="nama" required></td>
+              </tr>
+              <tr>
+                <td>Harga</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="harga" min="0" required></td>
+              </tr>
+              <tr>
+                <td>Kategori</td>
+                <td>⠀:⠀</td>
+                <td>
+                  <select name="kategori" style="width: 177px">
+                    <option value="Makanan">Makanan</option>
+                    <option value="Minuman">Minuman</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("createformp").innerHTML = "";
+        }
+      }
+      function updatep(produkString) {
+        var produk = JSON.parse(produkString);
+        let ka;
+        if(produk.Kategori == "Makanan") {
+          ka = `<select name="kategori" style="width: 177px">
+            <option value="Makanan" selected>Makanan</option>
+            <option value="Minuman">Minuman</option>
+          </select>`
+        } else {
+          ka = `<select name="kategori" style="width: 177px">
+            <option value="Makanan">Makanan</option>
+            <option value="Minuman" selected>Minuman</option>
+          </select>`
+        }
+        if(document.getElementById("updateformp").innerHTML == "") {
+          document.getElementById("updateformp").innerHTML = `
+            <input type="text" name="_id" value="${produk._id}" hidden>
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Nama ⠀</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="nama" value="${produk.Nama}" required></td>
+              </tr>
+              <tr>
+                <td>Harga ⠀</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="harga" min="0" value="${produk.Harga}" required></td>
+              </tr>
+              <tr>
+                <td>Kategori</td>
+                <td>⠀:⠀</td>
+                <td>
+                  ${ka}
+                </td>
+              </tr>
+            </table>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("updateformp").innerHTML = "";
+        }
+      }
+      function createpb() {
+        if(document.getElementById("createformpb").innerHTML == "") {
+          document.getElementById("createformpb").innerHTML = `
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Produk</td>
+                <td>⠀:⠀</td>
+                <td>
+                  <select name="produk" style="width: 177px">
+                    <% produk.forEach(function(produk) { %>
+                      <option value="<%= produk.Nama %>"><%= produk.Nama %></option>
+                    <% }) %>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Bahan</td>
+                <td>⠀:⠀</td>
+                <td>
+                  <select name="bahan" style="width: 177px">
+                    <% bahan.forEach(function(bahan) { %>
+                      <option value="<%= bahan.Nama %>"><%= bahan.Nama %></option>
+                    <% }) %>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Jumlah</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="jumlah" min="0" required></td>
+              </tr>
+            </table>
+            <input type="text" name="satuan" hidden>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("createformpb").innerHTML = "";
+        }
+      }
+      async function updatepb(produkbahanString) {
+        var produkbahan = JSON.parse(produkbahanString);
+        var produk;
+        await fetch('http://127.0.0.1:3000/renderp').then((response) => {
+          return response.json()
+        }).then((data) => {
+          produk = data;
+        });
+        var bahan;
+        await fetch('http://127.0.0.1:3000/renderb').then((response) => {
+          return response.json()
+        }).then((data) => {
+          bahan = data;
+        });
+        if(document.getElementById("updateformpb").innerHTML == "") {
+          let pr;
+          produk.forEach(function(produk) {
+            if(produk.Nama == produkbahan.Produk) {
+              pr += `<option value="${produk.Nama}" selected>${produk.Nama}</option>`;
+            } else {
+              pr += `<option value="${produk.Nama}">${produk.Nama}</option>`;
+            }
+          })
+          let ba;
+          bahan.forEach(function(bahan) {
+            if(bahan.Nama == produkbahan.Bahan) {
+              ba += `<option value="${bahan.Nama}" selected>${bahan.Nama}</option>`;
+            } else {
+              ba += `<option value="${bahan.Nama}">${bahan.Nama}</option>`;
+            }
+          })
+          document.getElementById("updateformpb").innerHTML = `
+            <input type="text" name="_id" value="${produkbahan._id}" hidden>
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Produk</td>
+                <td>⠀:⠀</td>
+                <td>
+                  <select name="produk" style="width: 177px">
+                    ${pr}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Bahan</td>
+                <td>⠀:⠀</td>
+                <td>
+                  <select name="bahan" style="width: 177px">
+                    ${ba}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Jumlah</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="jumlah" min="0" value="${produkbahan.Jumlah}" required></td>
+              </tr>
+            </table>
+            <input type="text" name="satuan" value="${produkbahan.Satuan}" hidden>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("updateformpb").innerHTML = "";
+        }
+      }
+    </script>
+  </body>
+</html>

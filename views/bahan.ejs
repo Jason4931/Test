@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aplikasi Cafe</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <a href="/">Kembali</a>
+    <p>Bahan/Stock Yang Tersedia</p>
+    <button style="cursor:pointer" onclick="create()">Insert</button>
+    <form action="/create/bahan" method="post">
+      <p id="createform"></p>
+    </form>
+    <form action="/update/bahan" method="post">
+      <p id="updateform"></p>
+    </form>
+    <br>
+    <table border="1">
+      <tr>
+        <th>Nama</th>
+        <th>Jumlah</th>
+        <th>Satuan</th>
+        <th colspan="2">Action</th>
+      </tr>
+      <% if(bahan.length > 0) { %>
+        <% bahan.forEach(function(bahan) { %>
+          <tr>
+            <td><%= bahan.Nama %></td>
+            <td><%= bahan.Jumlah %></td>
+            <td><%= bahan.Satuan %></td>
+            <td><button style="cursor:pointer" onclick="update('<%= JSON.stringify(bahan) %>')">Update</button></td>
+            <td><button style="cursor:pointer"><a style="text-decoration:none;color:black" href="/delete/bahan/<%= bahan._id %>">Delete</a></button></td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr><td colspan="4">Tidak Ada Data</td></tr>
+      <% } %>
+    </table>
+    <script>
+      function create() {
+        if(document.getElementById("createform").innerHTML == "") {
+          document.getElementById("createform").innerHTML = `
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Nama</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="nama" required></td>
+              </tr>
+              <tr>
+                <td>Jumlah</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="jumlah" min="0" required></td>
+              </tr>
+              <tr>
+                <td>Satuan</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="satuan" required></td>
+              </tr>
+            </table>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("createform").innerHTML = "";
+        }
+      }
+      function update(bahanString) {
+        var bahan = JSON.parse(bahanString);
+        if(document.getElementById("updateform").innerHTML == "") {
+          document.getElementById("updateform").innerHTML = `
+            <input type="text" name="_id" value="${bahan._id}" hidden>
+            <table cellspacing="0" cellpadding="0">
+              <tr>
+                <td>Nama</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="nama" value="${bahan.Nama}" required></td>
+              </tr>
+              <tr>
+                <td>Jumlah</td>
+                <td>⠀:⠀</td>
+                <td><input type="number" name="jumlah" min="0" value="${bahan.Jumlah}" required></td>
+              </tr>
+              <tr>
+                <td>Satuan</td>
+                <td>⠀:⠀</td>
+                <td><input type="text" name="satuan" value="${bahan.Satuan}" required></td>
+              </tr>
+            </table>
+            <input type="submit" value="Submit" style="cursor:pointer">
+          `;
+        } else {
+          document.getElementById("updateform").innerHTML = "";
+        }
+      }
+    </script>
+  </body>
+</html>
