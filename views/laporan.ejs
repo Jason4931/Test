@@ -3,23 +3,36 @@
   <head>
     <title>Aplikasi Cafe</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.4/css/dataTables.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+    <style>
+      @media print
+      {    
+        .no-print, .no-print *
+        {
+          display: none !important;
+        }
+      }
+    </style>
   </head>
   <body>
-    <a href="/">Kembali</a>
-    <p>Laporan</p>
-    <p>
-      <form action="/laporan/p" method="post">
-        Periode :
-        <% if(state == "n") { %>
-          <input name="start" type="date" value="<%= datenow %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= datenow %>" max="<%= datenow %>">
-        <% } else { %>
-          <input name="start" type="date" value="<%= start %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= end %>" max="<%= datenow %>">
-        <% } %>
-        <br>
-        <input type="submit">
-      </form>
-      <a href="/laporan/n">Refresh Periode</a>
-    </p>
+    <div class='no-print'>
+      <a href="/">Kembali</a>
+      <p>Laporan</p>
+      <p>
+        <form action="/laporan/p" method="post">
+          Periode :
+          <% if(state == "n") { %>
+            <input name="start" type="date" value="<%= datenow %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= datenow %>" max="<%= datenow %>">
+          <% } else { %>
+            <input name="start" type="date" value="<%= start %>" max="<%= datenow %>"> - <input name="end" type="date" value="<%= end %>" max="<%= datenow %>">
+          <% } %>
+          <br>
+          <input type="submit">
+        </form>
+        <a href="/laporan/n">Refresh Periode</a>
+      </p>
+    </div>
     <table border="1" cellpadding="5">
       <tr>
         <td>
@@ -71,7 +84,9 @@
             <% bahan.forEach(function(bahan) { %>
               <tr>
                 <td><%= bahan.Nama %></td>
-                <% if(bahan.sisabeli == 0 || bahan.sisajual == 0) { %>
+                <% if(enddate < tglpertama[0].min) { %>
+                  <td>0</td>
+                <% } else if(bahan.sisabeli == 0 || bahan.sisajual == 0) { %>
                   <td><%= bahan.Jumlah %></td>
                 <% } else { %>
                   <td><%= bahan.sisabeli - bahan.sisajual %></td>
@@ -117,5 +132,178 @@
         </td>
       </tr>
     </table>
+    <!-- <button style="margin-top: 10px" onclick="window.print()" class="no-print">Print</button> -->
+    <table id="laporan" class="display nowrap" style="width:100%">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Nama</th>
+          <th>Harga Satuan</th>
+          <th>Harga Total</th>
+          <th>Jumlah</th>
+          <th>Satuan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(reportbeli.length > 0) { %>
+          <% reportbeli.forEach(function(reportbeli) { %>
+            <tr>
+              <td>Beli</td>
+              <td><%= reportbeli.Harga %></td>
+              <td><%= reportbeli.Harga * reportbeli.Jumlah %></td>
+              <td><%= reportbeli.Nama %></td>
+              <td><%= reportbeli.Jumlah %></td>
+              <td><%= reportbeli.Satuan %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+        <% if(reportjual.length > 0) { %>
+          <% reportjual.forEach(function(reportjual) { %>
+            <tr>
+              <td>Jual</td>
+              <td><%= reportjual.Harga %></td>
+              <td><%= reportjual.Harga * reportjual.Jumlah %></td>
+              <td><%= reportjual.Nama %></td>
+              <td><%= reportjual.Jumlah %></td>
+              <td><%= reportjual.Satuan %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Action</th>
+          <th>Nama</th>
+          <th>Harga Satuan</th>
+          <th>Harga Total</th>
+          <th>Jumlah</th>
+          <th>Satuan</th>
+        </tr>
+      </tfoot>
+    </table>
+    <table id="bahan" class="display nowrap" style="width:100%">
+      <thead>
+        <tr>
+          <th>Bahan</th>
+          <th>Sisa Stok</th>
+          <th>Perubahan Stok</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% bahan.forEach(function(bahan) { %>
+          <tr>
+            <td><%= bahan.Nama %></td>
+            <% if(enddate < tglpertama[0].min) { %>
+              <td>0</td>
+            <% } else if(bahan.sisabeli == 0 || bahan.sisajual == 0) { %>
+              <td><%= bahan.Jumlah %></td>
+            <% } else { %>
+              <td><%= bahan.sisabeli - bahan.sisajual %></td>
+            <% } %>
+            <td><%= bahan.sisabeli - bahan.sisajual %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Bahan</th>
+          <th>Sisa Stok</th>
+          <th>Perubahan Stok</th>
+        </tr>
+      </tfoot>
+    </table>
+    <table id="jual" class="display nowrap" style="width:100%">
+      <thead>
+        <tr>
+          <th>Produk</th>
+          <th>Jumlah Penjualan</th>
+          <th>Nilai Penjualan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(reportj.length > 0) { %>
+          <% reportj.forEach(function(reportj) { %>
+            <tr>
+              <td><%= reportj.nama %></td>
+              <td><%= reportj.jumlah %> <%= reportj.Satuan %></td>
+              <td><%= reportj.harga %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Produk</th>
+          <th>Jumlah Penjualan</th>
+          <th>Nilai Penjualan</th>
+        </tr>
+      </tfoot>
+    </table>
+    <table id="beli" class="display nowrap" style="width:100%">
+      <thead>
+        <tr>
+          <th>Bahan</th>
+          <th>Jumlah Pembelian</th>
+          <th>Nilai Pembelian</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(reportb.length > 0) { %>
+          <% reportb.forEach(function(reportb) { %>
+            <tr>
+              <td><%= reportb.nama %></td>
+              <td><%= reportb.jumlah %> <%= reportb.Satuan %></td>
+              <td><%= reportb.harga %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Bahan</th>
+          <th>Jumlah Pembelian</th>
+          <th>Nilai Pembelian</th>
+        </tr>
+      </tfoot>
+    </table>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.0.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+    <script>
+      new DataTable('#laporan', {
+        layout: {
+          topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+          }
+        }
+      });
+      new DataTable('#bahan', {
+        layout: {
+          topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+          }
+        }
+      });
+      new DataTable('#jual', {
+        layout: {
+          topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+          }
+        }
+      });
+      new DataTable('#beli', {
+        layout: {
+          topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+          }
+        }
+      });
+    </script>
   </body>
 </html>

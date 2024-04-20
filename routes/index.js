@@ -194,7 +194,9 @@ router.get('/laporan/n', async function(req, res, next) {
   //product_bahans.produk=products.id INNER JOIN stocks on product_bahans.bahan=stocks.id INNER JOIN
   //reportjuals on reportjuals.nama=products.nama WHERE reportjuals.created_at>='date(Y-m-d)' AND
   //reportjuals.created_at<='$date' GROUP BY stocks.nama ) as report GROUP BY nama")
-  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n" });
+  let enddate = 0;
+  let tglpertama = [{min: 0}];
+  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n", tglpertama: tglpertama, enddate: enddate });
 });
 router.post('/laporan/p', async function(req, res, next) {
   let start = req.body.start;
@@ -328,6 +330,15 @@ router.post('/laporan/p', async function(req, res, next) {
     },
     { $sort: { Tanggal: 1 } }
   ]);
+  let tglpertama = await reportbeli.aggregate([
+    {
+      $group:
+      {
+        _id: "$Tanggal",
+        min: { $min: "$Tanggal" }
+      }
+    }
+  ]);
   bahanp = await bahan.find();
   for (let i = 0; i < bahanp.length; i++) {
     if (sisabeli[i] != undefined) {
@@ -351,7 +362,8 @@ router.post('/laporan/p', async function(req, res, next) {
     }
   }
   // perubahan = await reportjual.find();
-  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, start: start, end: end, reportb: reportb, reportj: reportj, bahan: bahanp, state: "p" });
+  let enddate = new Date(end);
+  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, start: start, end: end, enddate: enddate, reportb: reportb, reportj: reportj, bahan: bahanp, state: "p", tglpertama: tglpertama });
 });
 router.post('/create/:for', async function(req, res, next) {
   try {
