@@ -6,197 +6,251 @@ let bahan = require('../models/bahan.js');
 let produkbahan = require('../models/produkbahan.js');
 let reportbeli = require('../models/reportbeli.js');
 let reportjual = require('../models/reportjual.js');
+let akun = require('../models/akun.js');
 
 /* GET home page. */
-router.get('/', async function(req, res, next) {
-  res.render('index');
+router.get('/', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      res.render('index', { Nama: req.session.Nama, Role: 'admin' });
+    } else {
+      res.render('index', { Nama: req.session.Nama, Role: 'user' });
+    }
+  } else {
+    res.render('login');
+  }
+});
+router.post('/', async function (req, res, next) {
+  let akunnama = await akun.find({ Nama: req.body.Nama });
+  if (akunnama.length != 0) {
+    req.session.Nama = req.body.Nama;
+    req.session.Role = akunnama[0].Role;
+  }
+  res.redirect('/');
+});
+router.get('/register', async function (req, res, next) {
+  res.render('register');
+});
+router.post('/register', async function (req, res, next) {
+  new akun({
+    Nama: req.body.Nama,
+    Pass: req.body.Pass,
+    Role: 'user'
+  }).save();
+  res.redirect('/');
+});
+router.get('/logout', async function (req, res, next) {
+  req.session.destroy(function(err) {
+    res.redirect('/');
+  })
 });
 router.get('/produk', async function(req, res, next) {
-  res.render('produk', { produk: await produk.find(), produkbahan: await produkbahan.find(), bahan: await bahan.find() });
-});
-router.get('/bahan', async function(req, res, next) {
-  res.render('bahan', { bahan: await bahan.find() });
-});
-router.get('/jual', async function (req, res, next) {
-  let today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
-  var yyyy = today.getFullYear();
-  today = yyyy + '-' + mm + '-' + dd;
-  res.render('jual', { produk: await produk.find(), today: today, err: "" });
-});
-router.get('/jual/err', async function (req, res, next) {
-  let today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
-  var yyyy = today.getFullYear();
-  today = yyyy + '-' + mm + '-' + dd;
-  res.render('jual', { produk: await produk.find(), today: today, err: "Bahan Tidak Mencukupi!" });
-});
-router.get('/beli', async function (req, res, next) {
-  let today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
-  var yyyy = today.getFullYear();
-  today = yyyy + '-' + mm + '-' + dd;
-  res.render('beli', { bahan: await bahan.find(), today: today });
-});
-router.get('/laporan/n', async function(req, res, next) {
-  let reportbelis;
-  let reportjuals;
-  let reportb;
-  let reportj;
-  // let perubahan;
-  let bahanp;
-  let today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
-  var yyyy = today.getFullYear();
-  today = yyyy + '-' + mm + '-' + dd;
-  reportbelis = await reportbeli.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    }
-  ]);
-  reportjuals = await reportjual.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    }
-  ]);
-  reportb = await reportbeli.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    },
-    {
-      $group: {
-        _id: "$Nama",
-        nama: { $first: "$Nama" },
-        harga: { $sum: { $multiply: ["$Harga", "$Jumlah"] } },
-        jumlah: { $sum: "$Jumlah" }
-      }
-    }
-  ]);
-  reportj = await reportjual.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    },
-    {
-      $group: {
-        _id: "$Nama",
-        nama: { $first: "$Nama" },
-        harga: { $sum: { $multiply: ["$Harga", "$Jumlah"] } },
-        jumlah: { $sum: "$Jumlah" }
-      }
-    }
-  ]);
-  let sisajual = await reportjual.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    },
-    { $group:
-      {
-        _id : "$Nama",
-        sum : { $sum: "$Jumlah" },
-        Nama: { $first: "$Nama" }
-      }
-    },
-    { $lookup:
-      {
-        from: 'produks',
-        localField: 'Nama',
-        foreignField: 'Nama',
-        as: 'produkJual'
-      }
-    },
-    { $lookup:
-      {
-        from: 'produkbahans',
-        localField: 'produkJual.Nama',
-        foreignField: 'Produk',
-        as: 'jumlahBahan'
-      }
-    }
-  ]);
-  let sisabeli = await reportbeli.aggregate([
-    {
-      $match:
-      {
-        $and: [
-          { Tanggal: { $gte: new Date(today) } },
-          { Tanggal: { $lte: new Date(today) } }
-        ]
-      }
-    },
-    {
-      $group:
-      {
-        _id: "$Nama",
-        sum: { $sum: "$Jumlah" }
-      }
-    }
-  ]);
-  bahanp = await bahan.find();
-  for (let i = 0; i < bahanp.length; i++) {
-    if (sisabeli[i] != undefined) {
-      bahanp[i].sisabeli = sisabeli[i].sum;
-    } else {
-      bahanp[i].sisabeli = 0;
-    }
-    if (sisajual[i] != undefined) {
-      sisajual.forEach((sisajuals) => {
-        sisajuals.jumlahBahan.forEach((jumlahBahan) => {
-          if (bahanp[i].Nama == jumlahBahan.Bahan) {
-            if (bahanp[i].sisajual == undefined) {
-              bahanp[i].sisajual = 0;
-            }
-            bahanp[i].sisajual += jumlahBahan.Jumlah * sisajual[i].sum;
-          }
-        });
-      });
-    } else {
-      bahanp[i].sisajual = 0;
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      res.render('produk', { produk: await produk.find(), produkbahan: await produkbahan.find(), bahan: await bahan.find() });
     }
   }
-  // perubahan = await reportjual.find();
-  //DB::select("SELECT nama, sum(jumlah) as jumlah FROM ( SELECT nama, sum(jumlah) as jumlah FROM `reportbelis`
-  //WHERE created_at>='date(Y-m-d)' AND created_at<='$date' GROUP BY nama UNION ALL SELECT stocks.nama,
-  //sum(product_bahans.jumlah*reportjuals.jumlah)*-1 as jumlah FROM `product_bahans` INNER JOIN products on
-  //product_bahans.produk=products.id INNER JOIN stocks on product_bahans.bahan=stocks.id INNER JOIN
-  //reportjuals on reportjuals.nama=products.nama WHERE reportjuals.created_at>='date(Y-m-d)' AND
-  //reportjuals.created_at<='$date' GROUP BY stocks.nama ) as report GROUP BY nama")
-  let enddate = 0;
-  let tglpertama = [{min: 0}];
-  res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n", tglpertama: tglpertama, enddate: enddate });
+});
+router.get('/bahan', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      res.render('bahan', { bahan: await bahan.find() });
+    }
+  }
+});
+router.get('/jual', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    let today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var yyyy = today.getFullYear();
+    today = yyyy + '-' + mm + '-' + dd;
+    res.render('jual', { produk: await produk.find(), today: today, err: "" });
+  }
+});
+router.get('/jual/err', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    let today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var yyyy = today.getFullYear();
+    today = yyyy + '-' + mm + '-' + dd;
+    res.render('jual', { produk: await produk.find(), today: today, err: "Bahan Tidak Mencukupi!" });
+  }
+});
+router.get('/beli', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    let today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var yyyy = today.getFullYear();
+    today = yyyy + '-' + mm + '-' + dd;
+    res.render('beli', { bahan: await bahan.find(), today: today });
+  }
+});
+router.get('/laporan/n', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      let reportbelis;
+      let reportjuals;
+      let reportb;
+      let reportj;
+      // let perubahan;
+      let bahanp;
+      let today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0');
+      var yyyy = today.getFullYear();
+      today = yyyy + '-' + mm + '-' + dd;
+      reportbelis = await reportbeli.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        }
+      ]);
+      reportjuals = await reportjual.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        }
+      ]);
+      reportb = await reportbeli.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: "$Nama",
+            nama: { $first: "$Nama" },
+            harga: { $sum: { $multiply: ["$Harga", "$Jumlah"] } },
+            jumlah: { $sum: "$Jumlah" }
+          }
+        }
+      ]);
+      reportj = await reportjual.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: "$Nama",
+            nama: { $first: "$Nama" },
+            harga: { $sum: { $multiply: ["$Harga", "$Jumlah"] } },
+            jumlah: { $sum: "$Jumlah" }
+          }
+        }
+      ]);
+      let sisajual = await reportjual.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        },
+        {
+          $group:
+          {
+            _id: "$Nama",
+            sum: { $sum: "$Jumlah" },
+            Nama: { $first: "$Nama" }
+          }
+        },
+        {
+          $lookup:
+          {
+            from: 'produks',
+            localField: 'Nama',
+            foreignField: 'Nama',
+            as: 'produkJual'
+          }
+        },
+        {
+          $lookup:
+          {
+            from: 'produkbahans',
+            localField: 'produkJual.Nama',
+            foreignField: 'Produk',
+            as: 'jumlahBahan'
+          }
+        }
+      ]);
+      let sisabeli = await reportbeli.aggregate([
+        {
+          $match:
+          {
+            $and: [
+              { Tanggal: { $gte: new Date(today) } },
+              { Tanggal: { $lte: new Date(today) } }
+            ]
+          }
+        },
+        {
+          $group:
+          {
+            _id: "$Nama",
+            sum: { $sum: "$Jumlah" }
+          }
+        }
+      ]);
+      bahanp = await bahan.find();
+      for (let i = 0; i < bahanp.length; i++) {
+        if (sisabeli[i] != undefined) {
+          bahanp[i].sisabeli = sisabeli[i].sum;
+        } else {
+          bahanp[i].sisabeli = 0;
+        }
+        if (sisajual[i] != undefined) {
+          sisajual.forEach((sisajuals) => {
+            sisajuals.jumlahBahan.forEach((jumlahBahan) => {
+              if (bahanp[i].Nama == jumlahBahan.Bahan) {
+                if (bahanp[i].sisajual == undefined) {
+                  bahanp[i].sisajual = 0;
+                }
+                bahanp[i].sisajual += jumlahBahan.Jumlah * sisajual[i].sum;
+              }
+            });
+          });
+        } else {
+          bahanp[i].sisajual = 0;
+        }
+      }
+      // perubahan = await reportjual.find();
+      //DB::select("SELECT nama, sum(jumlah) as jumlah FROM ( SELECT nama, sum(jumlah) as jumlah FROM `reportbelis`
+      //WHERE created_at>='date(Y-m-d)' AND created_at<='$date' GROUP BY nama UNION ALL SELECT stocks.nama,
+      //sum(product_bahans.jumlah*reportjuals.jumlah)*-1 as jumlah FROM `product_bahans` INNER JOIN products on
+      //product_bahans.produk=products.id INNER JOIN stocks on product_bahans.bahan=stocks.id INNER JOIN
+      //reportjuals on reportjuals.nama=products.nama WHERE reportjuals.created_at>='date(Y-m-d)' AND
+      //reportjuals.created_at<='$date' GROUP BY stocks.nama ) as report GROUP BY nama")
+      let enddate = 0;
+      let tglpertama = [{ min: 0 }];
+      res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n", tglpertama: tglpertama, enddate: enddate });
+    }
+  }
 });
 router.post('/laporan/p', async function(req, res, next) {
   let start = req.body.start;
@@ -425,19 +479,23 @@ router.post('/update/:for', async function(req, res, next) {
     return next(error);
   }
 });
-router.get('/delete/:for/:id', async function(req, res, next) {
-  try {
-    if(req.params.for == "bahan") {
-      await bahan.findByIdAndDelete(req.params.id);
-    } else if(req.params.for == "produk") {
-      await produk.findByIdAndDelete(req.params.id);
-    } else if(req.params.for == "produkbahan") {
-      await produkbahan.findByIdAndDelete(req.params.id);
-      req.params.for = "produk";
+router.get('/delete/:for/:id', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      try {
+        if (req.params.for == "bahan") {
+          await bahan.findByIdAndDelete(req.params.id);
+        } else if (req.params.for == "produk") {
+          await produk.findByIdAndDelete(req.params.id);
+        } else if (req.params.for == "produkbahan") {
+          await produkbahan.findByIdAndDelete(req.params.id);
+          req.params.for = "produk";
+        }
+        res.redirect('/' + req.params.for);
+      } catch (error) {
+        return next(error);
+      }
     }
-    res.redirect('/'+req.params.for);
-  } catch(error) {
-    return next(error);
   }
 });
 async function min(nama, angka) {
@@ -515,14 +573,22 @@ router.post('/processbeli', async function(req, res, next) {
   }
 });
 router.get('/renderp', async function(req, res, next) {
-  res.json(
-    await produk.find()
-  );
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      res.json(
+        await produk.find()
+      );
+    }
+  }
 });
-router.get('/renderb', async function(req, res, next) {
-  res.json(
-    await bahan.find()
-  );
+router.get('/renderb', async function (req, res, next) {
+  if (req.session.Nama != undefined) {
+    if (req.session.Role == "admin") {
+      res.json(
+        await bahan.find()
+      );
+    }
+  }
 });
 
 module.exports = router;

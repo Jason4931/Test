@@ -5,11 +5,14 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <p>Aplikasi Cafe</p>
+    <p>Aplikasi Cafe - <%= Nama %></p>
     <a href="/jual">Penjualan</a><br>
     <a href="/beli">Pembelian</a><br><br>
-    <a href="/produk">Tabel Produk</a><br>
-    <a href="/bahan">Tabel Bahan</a><br><br>
-    <a href="/laporan/n">Laporan</a>
+    <% if(Role == 'admin') { %>
+      <a href="/produk">Tabel Produk</a><br>
+      <a href="/bahan">Tabel Bahan</a><br><br>
+      <a href="/laporan/n">Laporan</a><br><br><br>
+    <% } %>
+    <a href="/logout">Logout</a>
   </body>
 </html>

@@ -9,6 +9,13 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+const session = require('express-session');
+app.use(session({
+  secret: 'my-secret',  // a secret string used to sign the session ID cookie
+  resave: false,  // don't save session if unmodified
+  saveUninitialized: false  // don't create session until something stored
+}));
+
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb+srv://Jason4931:cSbqK0jfvZpsoICA@cluster0.csawbwp.mongodb.net/aplikasi_cafe?retryWrites=true&w=majority&appName=Cluster0', {

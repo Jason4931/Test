@@ -8,6 +8,7 @@
     <p>Penjualan Produk</p>
     <a href="/">Kembali</a><br><br>
     <form action="/processjual" method="post">
+      <!-- @csrf laravel? -->
       <table cellspacing="0" cellpadding="0">
         <tr>
           <td>Nama</td>
@@ -23,7 +24,7 @@
         <tr>
           <td>Jumlah</td>
           <td>⠀:⠀</td>
-          <td><input name="jumlah" type="number" min="0" required></td>
+          <td><input name="jumlah" type="number" required></td>
         </tr>
         <tr>
           <td>Harga/Satuan</td>
