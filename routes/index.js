@@ -8,13 +8,17 @@ let reportbeli = require('../models/reportbeli.js');
 let reportjual = require('../models/reportjual.js');
 let akun = require('../models/akun.js');
 
+let crypto = require('crypto');
+let adminenc = crypto.createHash('sha256').update('admin').digest('hex');
+let userenc = crypto.createHash('sha256').update('user').digest('hex');
+
 /* GET home page. */
 router.get('/', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
-      res.render('index', { Nama: req.session.Nama, Role: 'admin' });
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == adminenc) {
+      res.render('index', { Nama: req.cookies.Nama, Role: req.cookies.Role });
     } else {
-      res.render('index', { Nama: req.session.Nama, Role: 'user' });
+      res.render('index', { Nama: req.cookies.Nama, Role: req.cookies.Role });
     }
   } else {
     res.render('login');
@@ -23,8 +27,13 @@ router.get('/', async function (req, res, next) {
 router.post('/', async function (req, res, next) {
   let akunnama = await akun.find({ Nama: req.body.Nama });
   if (akunnama.length != 0) {
-    req.session.Nama = req.body.Nama;
-    req.session.Role = akunnama[0].Role;
+    // req.session.Nama = req.body.Nama;
+    // req.session.Role = akunnama[0].Role;
+    let minute = 10 * 60 * 1000;
+    var NamaEnc = crypto.createHash('sha256').update(req.body.Nama).digest('hex');
+    var RoleEnc = crypto.createHash('sha256').update(akunnama[0].Role).digest('hex');
+    res.cookie('Nama', NamaEnc, { HttpOnly: true, maxAge: minute });
+    res.cookie('Role', RoleEnc, { HttpOnly: true, maxAge: minute });
   }
   res.redirect('/');
 });
@@ -40,57 +49,67 @@ router.post('/register', async function (req, res, next) {
   res.redirect('/');
 });
 router.get('/logout', async function (req, res, next) {
-  req.session.destroy(function(err) {
-    res.redirect('/');
-  })
+  res.clearCookie('Nama');
+  res.clearCookie('Role');
+  res.redirect('/');
 });
 router.get('/produk', async function(req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       res.render('produk', { produk: await produk.find(), produkbahan: await produkbahan.find(), bahan: await bahan.find() });
     }
+  } else {
+    res.render('page');
   }
 });
 router.get('/bahan', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       res.render('bahan', { bahan: await bahan.find() });
     }
+  } else {
+    res.render('page');
   }
 });
 router.get('/jual', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
+  if (req.cookies.Nama != undefined) {
     let today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0');
     var yyyy = today.getFullYear();
     today = yyyy + '-' + mm + '-' + dd;
     res.render('jual', { produk: await produk.find(), today: today, err: "" });
+  } else {
+    res.render('page');
   }
 });
 router.get('/jual/err', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
+  if (req.cookies.Nama != undefined) {
     let today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0');
     var yyyy = today.getFullYear();
     today = yyyy + '-' + mm + '-' + dd;
     res.render('jual', { produk: await produk.find(), today: today, err: "Bahan Tidak Mencukupi!" });
+  } else {
+    res.render('page');
   }
 });
 router.get('/beli', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
+  if (req.cookies.Nama != undefined) {
     let today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0');
     var yyyy = today.getFullYear();
     today = yyyy + '-' + mm + '-' + dd;
     res.render('beli', { bahan: await bahan.find(), today: today });
+  } else {
+    res.render('page');
   }
 });
 router.get('/laporan/n', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       let reportbelis;
       let reportjuals;
       let reportb;
@@ -250,6 +269,8 @@ router.get('/laporan/n', async function (req, res, next) {
       let tglpertama = [{ min: 0 }];
       res.render('laporan', { reportjual: reportjuals, reportbeli: reportbelis, datenow: today, reportb: reportb, reportj: reportj, bahan: bahanp, state: "n", tglpertama: tglpertama, enddate: enddate });
     }
+  } else {
+    res.render('page');
   }
 });
 router.post('/laporan/p', async function(req, res, next) {
@@ -480,8 +501,8 @@ router.post('/update/:for', async function(req, res, next) {
   }
 });
 router.get('/delete/:for/:id', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       try {
         if (req.params.for == "bahan") {
           await bahan.findByIdAndDelete(req.params.id);
@@ -573,8 +594,8 @@ router.post('/processbeli', async function(req, res, next) {
   }
 });
 router.get('/renderp', async function(req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       res.json(
         await produk.find()
       );
@@ -582,8 +603,8 @@ router.get('/renderp', async function(req, res, next) {
   }
 });
 router.get('/renderb', async function (req, res, next) {
-  if (req.session.Nama != undefined) {
-    if (req.session.Role == "admin") {
+  if (req.cookies.Nama != undefined) {
+    if (req.cookies.Role == "admin") {
       res.json(
         await bahan.find()
       );
